@@ -38,8 +38,8 @@ Try it out: [Random Crossword Generator](https://your-vercel-app.vercel.app)
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/random-crossword-generator.git
-   cd random-crossword-generator
+   https://github.com/obasan12/crossword.git
+   cd crossword
    ```
 
 2. **Create a virtual environment** (recommended):
