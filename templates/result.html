@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Crossword Puzzle - Results{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: #333; margin-bottom: 10px;">
+            <i class="fas fa-puzzle-piece"></i> Your Crossword Puzzle
+        </h2>
+        <p style="color: #666; font-size: 1.1rem;">
+            Generated from: <a href="{{ source_url }}" target="_blank" style="color: #667eea;">{{ source_url }}</a>
+        </p>
+    </div>
+
+    {% if puzzle %}
+    <div style="text-align: center;">
+        <div class="crossword-grid" id="crosswordGrid">
+            {% for row in puzzle.grid %}
+            <div class="crossword-row">
+                {% for cell in row %}
+                <div class="crossword-cell {% if cell == ' ' %}empty{% else %}filled{% endif %}">
+                    {% if cell != ' ' %}{{ cell }}{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="clues-section">
+        <h3 style="text-align: center; margin-bottom: 20px; color: #333;">
+            <i class="fas fa-list"></i> Clues
+        </h3>
+        
+        <div class="clues-grid">
+            <div class="clue-list">
+                <h3><i class="fas fa-arrow-right"></i> Across</h3>
+                {% for clue in puzzle.across_clues %}
+                <div class="clue-item">
+                    <span class="clue-number">{{ clue.number }}.</span>
+                    {{ clue.definition }}
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="clue-list">
+                <h3><i class="fas fa-arrow-down"></i> Down</h3>
+                {% for clue in puzzle.down_clues %}
+                <div class="clue-item">
+                    <span class="clue-number">{{ clue.number }}.</span>
+                    {{ clue.definition }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Generate Another Puzzle
+        </a>
+        <button class="btn" onclick="printPuzzle()" style="margin-left: 10px;">
+            <i class="fas fa-print"></i> Print Puzzle
+        </button>
+    </div>
+
+    <div class="source-info">
+        <p><strong>Puzzle Statistics:</strong></p>
+        <p>Words included: {{ puzzle.words|length }} | Score: {{ "%.1f"|format(puzzle.score) }}</p>
+        <p><small>Words: {{ puzzle.words|join(', ') }}</small></p>
+    </div>
+
+    {% else %}
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-triangle"></i> No puzzle was generated. Please try again with a different URL.
+    </div>
+    <div style="text-align: center;">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Try Again
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Interactive crossword functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Set data attributes for all cells
+    const rows = document.querySelectorAll('.crossword-row');
+    rows.forEach((row, rowIndex) => {
+        const cells = row.querySelectorAll('.crossword-cell');
+        cells.forEach((cell, colIndex) => {
+            cell.setAttribute('data-row', rowIndex);
+            cell.setAttribute('data-col', colIndex);
+        });
+    });
+    
+    const cells = document.querySelectorAll('.crossword-cell.filled');
+    
+    cells.forEach(cell => {
+        cell.addEventListener('click', function() {
+            // Highlight the word this cell belongs to
+            highlightWord(this);
+        });
+        
+        cell.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#667eea';
+            this.style.color = 'white';
+        });
+        
+        cell.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '#333';
+            this.style.color = 'white';
+        });
+    });
+});
+
+function highlightWord(cell) {
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+    
+    // Reset all cells
+    document.querySelectorAll('.crossword-cell').forEach(c => {
+        c.style.backgroundColor = '';
+        c.style.color = '';
+    });
+    
+    // Find and highlight the word
+    const positions = {{ puzzle.positions|tojson }};
+    
+    positions.forEach(pos => {
+        if (pos.direction === 'horizontal') {
+            if (row === pos.row && col >= pos.col && col < pos.col + pos.word.length) {
+                highlightWordCells(pos.row, pos.col, pos.word.length, 'horizontal');
+            }
+        } else {
+            if (col === pos.col && row >= pos.row && row < pos.row + pos.word.length) {
+                highlightWordCells(pos.row, pos.col, pos.word.length, 'vertical');
+            }
+        }
+    });
+}
+
+function highlightWordCells(startRow, startCol, length, direction) {
+    for (let i = 0; i < length; i++) {
+        let cell;
+        if (direction === 'horizontal') {
+            cell = document.querySelector(`[data-row="${startRow}"][data-col="${startCol + i}"]`);
+        } else {
+            cell = document.querySelector(`[data-row="${startRow + i}"][data-col="${startCol}"]`);
+        }
+        
+        if (cell) {
+            cell.style.backgroundColor = '#28a745';
+            cell.style.color = 'white';
+        }
+    }
+}
+
+function printPuzzle() {
+    const printWindow = window.open('', '_blank');
+    const puzzleContent = document.querySelector('.card').innerHTML;
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Crossword Puzzle</title>
+            <style>
+                body { font-family: Arial, sans-serif; }
+                .crossword-grid { display: inline-block; border: 2px solid #333; }
+                .crossword-row { display: flex; }
+                .crossword-cell { 
+                    width: 35px; height: 35px; 
+                    border: 1px solid #ccc; 
+                    display: flex; align-items: center; 
+                    justify-content: center; 
+                    font-weight: bold; 
+                    background: white; 
+                }
+                .crossword-cell.filled { background: #333; color: white; }
+                .crossword-cell.empty { background: #f8f9fa; }
+                .clues-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+                .clue-list { background: #f8f9fa; padding: 15px; }
+                .clue-item { margin-bottom: 8px; }
+                .clue-number { font-weight: bold; color: #333; }
+                @media print { body { margin: 20px; } }
+            </style>
+        </head>
+        <body>
+            <h1>Crossword Puzzle</h1>
+            <p>Generated from: ${document.querySelector('.source-info a').href}</p>
+            ${puzzleContent}
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Add keyboard navigation
+document.addEventListener('keydown', function(e) {
+    const cells = Array.from(document.querySelectorAll('.crossword-cell.filled'));
+    const currentCell = document.querySelector('.crossword-cell.filled:focus');
+    
+    if (!currentCell) return;
+    
+    const currentIndex = cells.indexOf(currentCell);
+    let nextIndex = currentIndex;
+    
+    switch(e.key) {
+        case 'ArrowUp':
+            e.preventDefault();
+            nextIndex = Math.max(0, currentIndex - 1);
+            break;
+        case 'ArrowDown':
+            e.preventDefault();
+            nextIndex = Math.min(cells.length - 1, currentIndex + 1);
+            break;
+        case 'ArrowLeft':
+            e.preventDefault();
+            nextIndex = Math.max(0, currentIndex - 1);
+            break;
+        case 'ArrowRight':
+            e.preventDefault();
+            nextIndex = Math.min(cells.length - 1, currentIndex + 1);
+            break;
+    }
+    
+    if (nextIndex !== currentIndex) {
+        cells[nextIndex].focus();
+        highlightWord(cells[nextIndex]);
+    }
+});
+
+// Make cells focusable
+document.querySelectorAll('.crossword-cell.filled').forEach(cell => {
+    cell.tabIndex = 0;
+});
+</script>
+{% endblock %} 

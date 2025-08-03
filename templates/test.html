@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Template</title>
+</head>
+<body>
+    <h1>Test Template</h1>
+    {% if puzzle %}
+        <p>Puzzle exists with {{ puzzle.words|length }} words</p>
+        <p>Score: {{ puzzle.score }}</p>
+        <p>Across clues: {{ puzzle.across_clues|length }}</p>
+        <p>Down clues: {{ puzzle.down_clues|length }}</p>
+    {% else %}
+        <p>No puzzle</p>
+    {% endif %}
+</body>
+</html> 

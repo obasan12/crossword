@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Random Crossword Generator - Home{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 style="margin-bottom: 20px; color: #333; text-align: center;">
+        <i class="fas fa-globe"></i> Enter a Website URL
+    </h2>
+    
+    {% if error %}
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+    </div>
+    {% endif %}
+    
+    <form method="POST" action="{{ url_for('generate_crossword') }}" id="crosswordForm">
+        <div class="form-group">
+            <label for="url">
+                <i class="fas fa-link"></i> Website URL
+            </label>
+            <input 
+                type="url" 
+                id="url" 
+                name="url" 
+                class="form-control" 
+                placeholder="https://example.com"
+                required
+                value="{{ request.form.get('url', '') }}"
+            >
+            <small style="color: #666; margin-top: 5px; display: block;">
+                Enter any website URL to generate a crossword puzzle from its content
+            </small>
+        </div>
+        
+        <div style="text-align: center;">
+            <button type="submit" class="btn" id="generateBtn">
+                <i class="fas fa-magic"></i> Generate Crossword Puzzle
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 15px; color: #333;">
+        <i class="fas fa-info-circle"></i> How It Works
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        <div style="text-align: center; padding: 20px;">
+            <i class="fas fa-spider" style="font-size: 2rem; color: #667eea; margin-bottom: 10px;"></i>
+            <h4>1. Web Scraping</h4>
+            <p>Our system crawls the website and extracts meaningful words from the content.</p>
+        </div>
+        <div style="text-align: center; padding: 20px;">
+            <i class="fas fa-brain" style="font-size: 2rem; color: #667eea; margin-bottom: 10px;"></i>
+            <h4>2. Word Processing</h4>
+            <p>Words are filtered, defined, and prepared for crossword generation.</p>
+        </div>
+        <div style="text-align: center; padding: 20px;">
+            <i class="fas fa-puzzle-piece" style="font-size: 2rem; color: #667eea; margin-bottom: 10px;"></i>
+            <h4>3. Puzzle Generation</h4>
+            <p>Multiple crossword puzzles are generated and the best one is selected.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 15px; color: #333;">
+        <i class="fas fa-lightbulb"></i> Tips for Better Results
+    </h3>
+    <ul style="list-style: none; padding: 0;">
+        <li style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+            <i class="fas fa-check" style="color: #28a745; margin-right: 10px;"></i>
+            Choose websites with rich text content (articles, blogs, documentation)
+        </li>
+        <li style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+            <i class="fas fa-check" style="color: #28a745; margin-right: 10px;"></i>
+            Avoid image-heavy sites or those with minimal text
+        </li>
+        <li style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+            <i class="fas fa-check" style="color: #28a745; margin-right: 10px;"></i>
+            Make sure the website is publicly accessible
+        </li>
+        <li style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+            <i class="fas fa-check" style="color: #28a745; margin-right: 10px;"></i>
+            The process may take up to a minute for complex websites
+        </li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('crosswordForm').addEventListener('submit', function(e) {
+    const url = document.getElementById('url').value.trim();
+    if (!url) {
+        e.preventDefault();
+        alert('Please enter a valid URL');
+        return;
+    }
+    
+    // Show loading state
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    
+    showLoading();
+});
+
+// Auto-focus on URL input
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('url').focus();
+});
+</script>
+{% endblock %} 
